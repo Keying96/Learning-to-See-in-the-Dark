@@ -17,6 +17,7 @@ checkpoint_dir = './checkpoint/Sony/'
 result_dir = './result_Iphone/'
 
 ratiosList = {28, 87, 189, 366}
+ratioA = 33
 
 
 def lrelu(x):
@@ -148,12 +149,13 @@ def toSeeInTheDark(ratio, in_path):
     output = output[0, :, :, :]
 
     tmp_test_name = os.path.basename(in_path).split('.')[0]
-    result_path = os.path.join(result_dir, r'final_%d/'%(ratio) + tmp_test_name+'.png')
+
+    result_path = os.path.join(result_dir, r'final_%d/'%(ratio) + tmp_test_name+'_%d.png'% ratio)
     scipy.misc.toimage(output * 255, high=255, low=0, cmin=0, cmax=255).save(result_path)
 
 
-def imageOps(ratio, tmp_test_path, result_dir):
-    new_imge = toSeeInTheDark(ratio,tmp_test_path)
+def imageOps(ratio,tmp_test_path, result_dir):
+    toSeeInTheDark(ratio,tmp_test_path)
 
     # tmp_test_name = os.path.basename(tmp_test_path).split('.')[0]
     # tmp_result_name = os.path.join(result_dir, r'final_%d/'%(ratio) + tmp_test_name+'.png')
@@ -167,18 +169,25 @@ def threadOPS(input_dir,result_dir):
     else:
         print('input dir is wrong')
         return -1
+
+    threadImage = [0] * 5
+    _index = 0
     for test_fn in test_fns:
         print(test_fn)
         tmp_test_path = test_fn
 
         if tmp_test_path.split('.')[1] != "DS_Store":
-            threadImage = [0] * 5
-            _index = 0
-            for ratio in ratiosList:
-                threadImage[_index] = threading.Thread(target= imageOps,
-                                                       args=(ratio, tmp_test_path, result_dir))
-                threadImage[_index].start()
-                time.sleep(0.2)
+            threadImage[_index] = threading.Thread(target= imageOps,
+                                                       args=(ratioA, tmp_test_path, result_dir, ))
+            threadImage[_index].start()
+            _index += 1
+            time.sleep(1)
+
+            # for ratio in ratiosList:
+            #     threadImage[_index] = threading.Thread(target= imageOps,
+            #                                            args=(ratio, tmp_test_path, result_dir))
+            #     threadImage[_index].start()
+            #     _index += 1
 
 
 
@@ -188,6 +197,9 @@ if __name__=="__main__":
     for ratio in ratiosList:
         if not os.path.isdir(result_dir + r'final_%d/'%(ratio)):
             os.makedirs(result_dir + r'final_%d/'%(ratio))
+
+    if not os.path.isdir(result_dir + r'final_%d/' % (ratioA)):
+         os.makedirs(result_dir + r'final_%d/' %(ratioA))
 
     threadOPS(input_dir,result_dir)
 
