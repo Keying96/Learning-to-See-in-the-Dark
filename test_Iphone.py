@@ -170,7 +170,7 @@ def threadOPS(input_dir,result_dir):
         print('input dir is wrong')
         return -1
 
-    threadImage = [0] * 20
+    threadImage = [0] * 14
     _index = 0
     for test_fn in test_fns:
         print(test_fn)
