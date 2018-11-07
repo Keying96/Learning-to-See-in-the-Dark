@@ -10,7 +10,7 @@ import numpy as np
 import rawpy
 import glob
 
-input_dir = './dataset/Iphone/'
+input_dir = './dataset/UnderexposedImage/'
 checkpoint_dir = './checkpoint/Sony/'
 result_dir = './result_Iphone/'
 
