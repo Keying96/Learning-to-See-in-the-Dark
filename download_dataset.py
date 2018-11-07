@@ -45,7 +45,11 @@ if __name__ == "__main__":
     # os.system('unzip dataset/Fuji.zip -d dataset')
 
     #设置第二个参数，对应到drive中需要下载的文件夹
+    # print('Dowloading Iphone subset... ')
+    # download_file_from_google_drive('101eXwidf9a5ZmvAt__sLWI9H9g_3KMp7', 'Iphone.zip')
+    # print(os.path.abspath('.'))
+    # os.system('unzip ./Iphone.zip -d dataset')
     print('Dowloading Iphone subset... ')
-    download_file_from_google_drive('101eXwidf9a5ZmvAt__sLWI9H9g_3KMp7', 'Iphone.zip')
+    download_file_from_google_drive('13cT0Rjwd8yCDEru6Yiw3WQUs5aVQeh8d', 'UnderexposedImage')
     print(os.path.abspath('.'))
-    os.system('unzip ./Iphone.zip -d dataset')
+    # os.system('unzip ./Iphone.zip -d dataset')
