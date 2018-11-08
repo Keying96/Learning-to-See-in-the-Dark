@@ -19,7 +19,7 @@ test_fns = glob.glob(input_dir + '/*.dng')
 # test_ids = [int(os.path.basename(test_fn)[0:5]) for test_fn in test_fns]
 test_ids = [(os.path.basename(test_fn).split('.')[0]) for test_fn in test_fns]
 
-ratio = 28
+ratio = 87
 
 
 DEBUG = 0
