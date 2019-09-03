@@ -1,7 +1,4 @@
 # -*- coding:utf-8 -*-
-
-# uniform content loss + adaptive threshold + per_class_input + recursive G
-# improvement upon cqf37
 from __future__ import division
 import os, scipy.io
 import tensorflow as tf
@@ -9,23 +6,18 @@ import tensorflow.contrib.slim as slim
 import numpy as np
 import rawpy
 import glob
+import  threading,time
 
-input_dir = './dataset/UnderexposedImage/'
+import cv2 as cv
+import os.path
+
+
+input_dir = "./dataset/Iphone/"
 checkpoint_dir = './checkpoint/Sony/'
 result_dir = './result_Iphone/'
 
-# get test IDs
-test_fns = glob.glob(input_dir + '/*.dng')
-# test_ids = [int(os.path.basename(test_fn)[0:5]) for test_fn in test_fns]
-test_ids = [(os.path.basename(test_fn).split('.')[0]) for test_fn in test_fns]
-
-ratio = 87
-
-
-DEBUG = 0
-if DEBUG == 1:
-    save_freq = 2
-    test_ids = test_ids[0:5]
+ratiosList = {28, 87, 189, 366}
+ratioA = 33
 
 
 def lrelu(x):
@@ -83,7 +75,6 @@ def network(input):
     out = tf.depth_to_space(conv10, 2)
     return out
 
-
 def pack_raw(raw):
     # pack Bayer image to 4 channels
     im = raw.raw_image_visible.astype(np.float32)
@@ -100,59 +91,116 @@ def pack_raw(raw):
                           im[1:H:2, 0:W:2, :]), axis=2)
     return out
 
+def RAW2PNG(test_name,raw_name):
+    # print("gt_path: {gt_path}".format(gt_path = gt_path))
 
-sess = tf.Session()
-in_image = tf.placeholder(tf.float32, [None, None, None, 4])
-gt_image = tf.placeholder(tf.float32, [None, None, None, 3])
-out_image = network(in_image)
+    gt_raw = rawpy.imread(test_name)
+    im = gt_raw.postprocess(use_camera_wb=True, half_size=False, no_auto_bright=True, output_bps=16)
+    gt_full = np.expand_dims(np.float32(im / 65535.0), axis=0)
 
-saver = tf.train.Saver()
-sess.run(tf.global_variables_initializer())
-ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
-if ckpt:
-    print('loaded ' + ckpt.model_checkpoint_path)
-    saver.restore(sess, ckpt.model_checkpoint_path)
+    gt_full = gt_full[0, :, :, :]
 
-if not os.path.isdir(result_dir + 'final/'):
-    os.makedirs(result_dir + 'final/')
+    # scipy.misc.toimage(gt_full * 255, high=255, low=0, cmin=0, cmax=255).save(
+    #     result_dir + 'final/%5d_00_%d_gt.png' % (test_id, ratio))
 
-for test_id in test_ids:
-    # test the first image in each sequence
-    in_files = glob.glob(input_dir + test_id + '.dng')
-    for k in range(len(in_files)):
-        in_path = in_files[k]
-        in_fn = os.path.basename(in_path)
-        print(in_fn)
-        # in_exposure = float(in_fn[9:-5])
-        # gt_exposure = float(gt_fn[9:-5])
-        # ratio = min(gt_exposure / in_exposure, 300)
+    scipy.misc.toimage(gt_full * 255, high=255, low=0, cmin=0, cmax=255).save(raw_name)
 
-        raw = rawpy.imread(in_path)
-        input_full = np.expand_dims(pack_raw(raw), axis=0) * ratio
+def clearLabel(_ax):
+  _ax.tick_params(labelbottom="off",bottom="off")
+  _ax.tick_params(labelleft="off",left="off")
+  _ax.set_xticklabels([])
+  _ax.axis('off')
+  return _ax
 
-        im = raw.postprocess(use_camera_wb=True, half_size=False, no_auto_bright=True, output_bps=16)
-        # scale_full = np.expand_dims(np.float32(im/65535.0),axis = 0)*ratio
-        scale_full = np.expand_dims(np.float32(im / 65535.0), axis=0)
 
-        gt_full = np.expand_dims(np.float32(im / 65535.0), axis=0)
+def readImage(_filename):
+  if os.path.exists(_filename):
+    img = cv.imread(_filename)
+    return img
 
-        input_full = np.minimum(input_full, 1.0)
+#test the image
+def toSeeInTheDark(ratio, in_path):
+    sess = tf.Session()
+    in_image = tf.placeholder(tf.float32, [None, None, None, 4])
+    out_image = network(in_image)
 
-        output = sess.run(out_image, feed_dict={in_image: input_full})
-        output = np.minimum(np.maximum(output, 0), 1)
 
-        output = output[0, :, :, :]
-        # gt_full = gt_full[0, :, :, :]
-        # scale_full = scale_full[0, :, :, :]
-        # scale_full = scale_full * np.mean(gt_full) / np.mean(
-        #     scale_full)  # scale the low-light image to the same mean of the groundtruth
+    saver = tf.train.Saver()
+    sess.run(tf.global_variables_initializer())
+    ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
 
-        if not os.path.isdir(result_dir + 'final_%d/'%(ratio)):
-            os.makedirs(result_dir + 'final_%d/'%(ratio))
+    if ckpt:
+        print('loaded ' + ckpt.model_checkpoint_path)
+        saver.restore(sess, ckpt.model_checkpoint_path)
 
-        result_path = result_dir + 'final_%d/'%(ratio) + test_id + '_%d_out.png' %(ratio)
-        scipy.misc.toimage(output * 255, high=255, low=0, cmin=0, cmax=255).save(result_path)
-        # scipy.misc.toimage(scale_full * 255, high=255, low=0, cmin=0, cmax=255).save(
-        #     result_dir + 'final/%5d_00_%d_scale.png' % (test_id, ratio))
-        # scipy.misc.toimage(gt_full * 255, high=255, low=0, cmin=0, cmax=255).save(
-        #     result_dir + 'final/%5d_00_%d_gt.png' % (test_id, ratio))
+    if not os.path.isdir(result_dir + 'final/'):
+        os.makedirs(result_dir + 'final/')
+
+    raw = rawpy.imread(in_path)
+    input_full = np.expand_dims(pack_raw(raw), axis=0) * ratio
+
+    im = raw.postprocess(use_camera_wb=True, half_size=False, no_auto_bright=True, output_bps=16)
+
+    input_full = np.minimum(input_full, 1.0)
+
+    output = sess.run(out_image, feed_dict={in_image: input_full})
+    output = np.minimum(np.maximum(output, 0), 1)
+
+    output = output[0, :, :, :]
+
+    tmp_test_name = os.path.basename(in_path).split('.')[0]
+
+    result_path = os.path.join(result_dir, r'final_%d/'%(ratio) + tmp_test_name+'_%d.png'% ratio)
+    scipy.misc.toimage(output * 255, high=255, low=0, cmin=0, cmax=255).save(result_path)
+
+
+def imageOps(ratio,tmp_test_path, result_dir):
+    toSeeInTheDark(ratio,tmp_test_path)
+
+    # tmp_test_name = os.path.basename(tmp_test_path).split('.')[0]
+    # tmp_result_name = os.path.join(result_dir, r'final_%d/'%(ratio) + tmp_test_name+'.png')
+    # new_imge.save( tmp_result_name )
+
+def threadOPS(input_dir,result_dir):
+    if os.path.isdir(input_dir):
+        # get test IDs
+        test_fns = glob.glob(input_dir + '/*.dng')
+        test_ids = [os.path.basename(test_fn).split('.') for test_fn in test_fns]
+    else:
+        print('input dir is wrong')
+        return -1
+
+    threadImage = [0] * 14
+    _index = 0
+    for test_fn in test_fns:
+        print(test_fn)
+        tmp_test_path = test_fn
+
+        if tmp_test_path.split('.')[1] != "DS_Store":
+            threadImage[_index] = threading.Thread(target= imageOps,
+                                                       args=(ratioA, tmp_test_path, result_dir, ))
+            threadImage[_index].start()
+            _index += 1
+            time.sleep(1)
+
+            # for ratio in ratiosList:
+            #     threadImage[_index] = threading.Thread(target= imageOps,
+            #                                            args=(ratio, tmp_test_path, result_dir))
+            #     threadImage[_index].start()
+            #     _index += 1
+
+
+
+if __name__=="__main__":
+
+
+    for ratio in ratiosList:
+        if not os.path.isdir(result_dir + r'final_%d/'%(ratio)):
+            os.makedirs(result_dir + r'final_%d/'%(ratio))
+
+    if not os.path.isdir(result_dir + r'final_%d/' % (ratioA)):
+         os.makedirs(result_dir + r'final_%d/' %(ratioA))
+
+    threadOPS(input_dir,result_dir)
+
+
