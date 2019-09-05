@@ -218,7 +218,6 @@ if __name__ == '__main__':
         sess.run(init_op)
         # print("===============================================================")
         # print (add_channel_img.eval())
-        # print("===============================================================")
         feature_map = (feature_map.eval())
         print (feature_map)
     plot_feature_map(feature_map,"test")
