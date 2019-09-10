@@ -121,9 +121,9 @@ def slim2nn_conv2d(op_img, op_channel_number,
 #     with tf.compat.v1.Session() as sess:
         sess.run(init)
 
-#         kernelshape = op_kernelshape_list[0][3]
-        tempo_op_kernelshape = 2
-        for i in range(tempo_op_kernelshape):
+        kernelshape = op_kernelshape_list[0][3]
+#         tempo_op_kernelshape = 2
+        for i in range(kernelshape):
             # op_kernel_1_1 = tf.reshape(op_kernel_list[0].eval()[:, :, op_channel_number, i], op_kernelshape_list[0])
             op_kernel_1_1 = tf.reshape(op_kernel_list[0].eval()[:, :, op_channel_number, i], [3,3,1,1])
             op_biases_1_1 = tf.reshape(op_biases_list[0].eval()[i], [1])
@@ -131,9 +131,9 @@ def slim2nn_conv2d(op_img, op_channel_number,
             bias = tf.nn.bias_add(conv, op_biases_1_1)
             conv1 = lrelu(bias)
 
-#             out_num = op_kernelshape_list[1][3]
-            tempo_out_num = 2
-            for j in range(tempo_out_num):
+            out_num = op_kernelshape_list[1][3]
+#             tempo_out_num = 2
+            for j in range(out_num):
                 print ("num_input: {}  num_output: {}".format(i,j))
                 op_img = conv1
                 op_kernel_1_2 = tf.reshape(op_kernel_list[1].eval()[:, :, i, j], [3,3,1,1])
