@@ -117,7 +117,8 @@ def slim2nn_conv2d(op_img, op_channel_number,
     print ("conv1_2/kernel/bias: " + str(op_biasesshape_list[1]))
 
     init = tf.global_variables_initializer()
-    with tf.Session() as sess:
+#     with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         sess.run(init)
 
         kernelshape = op_kernelshape_list[0][3]
@@ -158,7 +159,8 @@ def conv2d_mulit_channel(input_img,op_kernel_list, op_biases_list,pattern_name,
     prepare_dir(decompose_conv_dir)
 
     init = tf.global_variables_initializer()
-    with tf.Session() as sess:
+#     with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         sess.run(init)
 
         for i in range(channel_number):
@@ -237,7 +239,8 @@ def load_model_checkpoint(layer_number):
     # op_biases_list = tf.concat(op_biases_list, axis=3)
 
     init = tf.global_variables_initializer()
-    with tf.Session() as sess:
+#     with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         sess.run(init)
 
         saver = tf.train.Saver()
