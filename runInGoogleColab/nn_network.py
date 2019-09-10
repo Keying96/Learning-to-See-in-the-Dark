@@ -8,7 +8,7 @@ import re
 import matplotlib.pyplot as plt
 
 # checkpoint_dir = './checkpoint/Sony/'
-checkpoint_dir = r'/content/Learning-to-See-in-the-Dark/checkpoint/Sony/'
+checkpoint_dir = r'./Learning-to-See-in-the-Dark/checkpoint/Sony/'
 result_dir = "./decompose_results/"
 
 
