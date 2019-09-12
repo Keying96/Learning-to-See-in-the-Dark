@@ -162,8 +162,9 @@ def conv2d_mulit_channel(input_img,op_kernel_list, op_biases_list,pattern_name,
     with tf.Session() as sess:
 #     with tf.compat.v1.Session() as sess:
         sess.run(init)
-
-        for i in range(channel_number):
+        
+        op_channel_number = 1
+        for i in range(op_channel_number):
             op_img = input_img[:, :, :, i]
             op_img = tf.reshape(op_img, [1, 1424, 2128, 1])
             feature_maps = slim2nn_conv2d(op_img, i, op_kernel_list, op_biases_list,
