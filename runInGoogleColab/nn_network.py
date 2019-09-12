@@ -269,6 +269,10 @@ def init(pattern_name,img_height,img_width):
 
 
 if __name__ == '__main__':
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
+    config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
+    tf.Session(config=config)
+    
     # 方法三进行指定卷积层计算
     op_layer_number = 2
     pattern_name_list = ["center_square", "center_line"]
