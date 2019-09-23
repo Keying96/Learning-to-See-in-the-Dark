@@ -22,13 +22,14 @@ tf.gfile.MakeDirs(log_dir)
 # jpg = tf.read_file('./dataset/Iphone/blackpink.jpeg')
 input_dir = './dataset/UnderexposedImage/'
 # input_path = './dataset/Iphone/00003.dng'
-checkpoint_dir = './checkpoint/Sony/'
+checkpoint_dir = '../checkpoint/Sony/'
 result_dir = './result_Iphone/'
 
-input_name = str(sys.argv[1])
-input_path = input_dir + input_name + '.dng'
-log_dir = log_dir + input_name
-print('log_dir: ' + log_dir)
+# input_name = str(sys.argv[1])
+# input_path = input_dir + input_name + '.dng'
+input_path = '/home/zhu/PycharmProjects/SeeInTheDark_Threading/dataset/short/00001_00_0.1s.ARW'
+# log_dir = log_dir + input_name
+# print('log_dir: ' + log_dir)
 
 def lrelu(x):
     return tf.maximum(x * 0.2, x)
@@ -165,7 +166,7 @@ in_image = input_full
 
 # 画像をTensorboardに出力
 # _ = tf.summary.image('local', tf.reshape(input_full, [-1, img_shape[0], img_shape[1], img_shape[2]]), 1)
-tf.summary.image('input', tf.reshape(input_full, [-1, 1512, 2016, 4]), 1)
+# tf.summary.image('input', tf.reshape(input_full, [-1, 1512, 2016, 4]), 1)
 
 out_image = network(in_image)
 #

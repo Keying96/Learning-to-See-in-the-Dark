@@ -7,7 +7,7 @@ from tensorflow.python import pywrap_tensorflow
 import re
 import matplotlib.pyplot as plt
 
-checkpoint_dir = './checkpoint/Sony/'
+checkpoint_dir = '../checkpoint/Sony/'
 # checkpoint_dir = r'./Learning-to-See-in-the-Dark/checkpoint/Sony/'
 result_dir = "./decompose_results/"
 
@@ -127,6 +127,7 @@ def slim2nn_conv2d(op_img, op_channel_number,
             # op_kernel_1_1 = tf.reshape(op_kernel_list[0].eval()[:, :, op_channel_number, i], op_kernelshape_list[0])
             op_kernel_1_1 = tf.reshape(op_kernel_list[0].eval()[:, :, op_channel_number, i], [3,3,1,1])
             op_biases_1_1 = tf.reshape(op_biases_list[0].eval()[i], [1])
+            print (op_biases_list[1].eval()[i])
             conv = tf.nn.conv2d(op_img, op_kernel_1_1, [1, 1, 1, 1], padding='SAME')
             bias = tf.nn.bias_add(conv, op_biases_1_1)
             conv1 = lrelu(bias)
@@ -137,7 +138,8 @@ def slim2nn_conv2d(op_img, op_channel_number,
                 print ("num_input: {}  num_output: {}".format(i,j))
                 op_img = conv1
                 op_kernel_1_2 = tf.reshape(op_kernel_list[1].eval()[:, :, i, j], [3,3,1,1])
-                op_biases_1_2 = tf.reshape(op_biases_list[1].eval()[i], [1])
+                op_biases_1_2 = tf.reshape(op_biases_list[1].eval()[j], [1])
+                print (op_biases_list[1].eval()[j])
                 conv = tf.nn.conv2d(op_img, op_kernel_1_2, [1, 1, 1, 1], padding='SAME')
                 bias = tf.nn.bias_add(conv, op_biases_1_2)
                 conv1 = lrelu(bias)
