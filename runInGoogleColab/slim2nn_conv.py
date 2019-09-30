@@ -10,7 +10,6 @@ import make_impluse_patterns
 import scipy.io, os,errno
 from tensorflow.python import pywrap_tensorflow
 import re
-import matplotlib.pyplot as plt
 import time
 import sys
 sys.path.append(r"/home/zhu/PycharmProjects/SeeInTheDark_Threading/visualize/")
@@ -84,7 +83,18 @@ def slim2nn_conv2d(image, op_kernel_list, op_biases_list,op_kernelshape_list,op_
     feature_channel_list = []
 
     with sess.as_default():
-        print ("op_biases_list: " + str(op_biases_list[0].eval()[0]))
+
+
+        op_img = tf.reshape(image, [1, 1424, 2128, 4])
+        op_kernel_1_1 = tf.reshape(op_kernel_list[0].eval(), [3, 3, 4, 32])
+        op_biases_1_1 = tf.reshape(op_biases_list[0].eval(), [32])
+        conv = tf.nn.conv2d(op_img, op_kernel_1_1, [1, 1, 1, 1], padding='SAME')
+        bias = tf.nn.bias_add(conv, op_biases_1_1)
+        conv1_1 = lrelu(bias)
+        sess.run(conv1_1)
+        conv1_1_feature = conv1_1[:, :, :, 0:32]
+        print ("conv1_1_feature[:,:,:,0]: {}".format(conv1_1_feature.eval()[:, :, :, 0]))
+
 
         num_layer = len(op_kernelshape_list)
         print ("num_layer: " + str(num_layer))
@@ -100,64 +110,61 @@ def slim2nn_conv2d(image, op_kernel_list, op_biases_list,op_kernelshape_list,op_
                 curr_layer = 0
 
                 op_kernel_1_1 = tf.reshape(op_kernel_list[curr_layer].eval()[:, :, image_channel, num_kernel1_1], [3, 3, 1, 1])
-                op_biases_1_1 = tf.reshape(op_biases_list[curr_layer].eval()[num_kernel1_1], [1])
                 conv = tf.nn.conv2d(op_img, op_kernel_1_1, [1, 1, 1, 1], padding='SAME')
-                bias = tf.nn.bias_add(conv, op_biases_1_1)
-                conv1_1 = lrelu(bias)
+                sess.run(conv)
+                feature_channel_list.append(conv.eval())
 
-                curr_layer = curr_layer+1
-                # num_output = op_kernelshape_list[curr_layer][3]
-                op_num_output = 1
-                num_input = op_kernelshape_list[curr_layer][2]
-                feature_conv1_2_list = []
+        concat_feature = tf.concat(feature_channel_list, axis=3)
+        concat_feature= (tf.reduce_sum(concat_feature, axis=3, keepdims=True))
+        op_biases_1_1 = tf.reshape(op_biases_list[0].eval()[0], [1])
+        bias = tf.nn.bias_add(concat_feature, op_biases_1_1)
+        conv1_1 = lrelu(bias)
+        sess.run(conv1_1)
+        print ("conv1_1 {}".format(conv1_1.eval()))
 
-                sess.run(conv1_1)
-                feature_channel_list.append(conv1_1)
 
-            #     for num_kernel1_2 in range(op_num_output):
-            #         op_img = conv1_1
-            #         op_kernel_1_2 = tf.reshape(op_kernel_list[curr_layer].eval()[:, :, num_kernel1_1, num_kernel1_2], [3, 3, 1, 1])
-            #         op_biases_1_2 = tf.reshape(op_biases_list[curr_layer].eval()[num_kernel1_2], [1])
-            #         conv = tf.nn.conv2d(op_img, op_kernel_1_2, [1, 1, 1, 1], padding='SAME')
-            #         bias = tf.nn.bias_add(conv, op_biases_1_2)
-            #         conv1_2 = lrelu(bias)
-            #
-            #         sess.run(conv1_2)
-            #         feature_conv1_2_list.append(conv1_2)
-            #         # print ("conv1_2:{}".format (conv1_2.eval()[:,:,:,0]))
-            #
-            #         if num_kernel1_2 % 5  == 0:
-            #             total = num_input * num_output
-            #             curr = num_kernel1_1 * num_output + num_kernel1_2 + 1
-            #             print ("Current Progress of image channel {} num_input: {}  num_output: {}:  "
-            #                    "{:.0f}/{:.0f}".format(image_channel, num_kernel1_1,num_kernel1_2, curr, total))
-            #             concat_conv1_2 = tf.concat(feature_conv1_2_list, axis=3)
-            #             concat_conv1_2 = (tf.reduce_sum(concat_conv1_2, axis=3, keepdims=True))
-            #             feature_conv1_2_list = []
-            #             feature_conv1_2_list.append(concat_conv1_2)
-            #
-            #
-            #     concat_conv1_1 = tf.concat(feature_conv1_2_list, axis=3)
-            #     concat_conv1_1 = (tf.reduce_sum(concat_conv1_1, axis=3, keepdims=True))
-            #     feature_conv1_1_list.append(concat_conv1_1)
-            #
-            # concat_feature = tf.concat(feature_conv1_1_list, axis=3)
-            # concat_feature= (tf.reduce_sum(concat_feature, axis=3, keepdims=True))
-            # feature_channel_list.append(concat_feature)
 
-        print ("-------------------------------------------------------")
-        print (feature_channel_list[0].eval().shape)
-        print (feature_channel_list[0].eval()[:,:,:,0])
-        print ("-------------------------------------------------------")
-        print (feature_channel_list[1].eval().shape)
-        print (feature_channel_list[1].eval()[:,:,:,0])
-        print ("-------------------------------------------------------")
-        print (feature_channel_list[2].eval().shape)
-        print (feature_channel_list[2].eval()[:,:,:,0])
-        print ("-------------------------------------------------------")
-        print (feature_channel_list[3].eval().shape)
-        print (feature_channel_list[3].eval()[:,:,:,0])
-        print ("-------------------------------------------------------")
+                # op_biases_1_1 = tf.reshape(op_biases_list[curr_layer].eval()[num_kernel1_1], [1])
+                # print ("num_kernel1_1 {} image_channel {} ".format(num_kernel1_1,image_channel))
+                # print ("op_kernel_1_1 {}: {}" .format(op_kernel_1_1.eval().shape, op_kernel_1_1.eval()))
+                # print ("op_biases_1_1 {}: {}" .format(op_biases_1_1.eval().shape, op_biases_1_1.eval()))
+                #
+                # conv = tf.nn.conv2d(op_img, op_kernel_1_1, [1, 1, 1, 1], padding='SAME')
+                # # bias = tf.nn.bias_add(conv, op_biases_1_1)
+                # # conv1_1 = lrelu(bias)
+                #
+                # curr_layer = curr_layer+1
+                # # num_output = op_kernelshape_list[curr_layer][3]
+                # op_num_output = 1
+                # num_input = op_kernelshape_list[curr_layer][2]
+                # feature_conv1_2_list = []
+                #
+                # sess.run(conv)
+                # feature_channel_list.append(conv)
+
+
+        # print ("-------------------------------------------------------")
+        # print (feature_channel_list[0].eval().shape)
+        # print (feature_channel_list[0].eval()[:,:,:,0])
+        # print ("-------------------------------------------------------")
+        # print (feature_channel_list[1].eval().shape)
+        # print (feature_channel_list[1].eval()[:,:,:,0])
+        # print ("-------------------------------------------------------")
+        # print (feature_channel_list[2].eval().shape)
+        # print (feature_channel_list[2].eval()[:,:,:,0])
+        # print ("-------------------------------------------------------")
+        # print (feature_channel_list[3].eval().shape)
+        # print (feature_channel_list[3].eval()[:,:,:,0])
+        # print ("-------------------------------------------------------")
+
+        # concat_feature = tf.concat(feature_channel_list, axis=3)
+        # concat_feature= (tf.reduce_sum(concat_feature, axis=3, keepdims=True))
+        # op_biases_1_1 = tf.reshape(op_biases_list[curr_layer].eval()[num_kernel1_1], [1])
+        # bias = tf.nn.bias_add(concat_feature, op_biases_1_1)
+        # conv1_1 = lrelu(bias)
+        # sess.run(conv1_1)
+        # print (conv1_1.eval())
+
 
     end_conv = time.time()
     print (end_conv - start_conv)
@@ -224,12 +231,13 @@ def load_model_checkpoint(sess,layer_number):
     checkpoint_path = os.path.join(checkpoint_dir, "model.ckpt")
     reader = pywrap_tensorflow.NewCheckpointReader(checkpoint_path)  # tf.train.NewCheckpointReader
     var_to_shape_map = reader.get_variable_to_shape_map()
+    # 获取网络所有层名
     for key in var_to_shape_map:
         if "/weights/Adam_1" in key:
             layer_name_list.append(key.split("/weights/Adam_1")[0])
-
     layer_name_list = sort_strings_with_emb_numbers(layer_name_list)
 
+    # 获取每个网络层kernel和biases的shaape
     for i in range(layer_number):
         decompose_conv_name = layer_name_list[i]
         print (decompose_conv_name)
@@ -312,27 +320,27 @@ if __name__ == '__main__':
     sess = tf.compat.v1.Session(config=config)
     init_sess = tf.compat.v1.global_variables_initializer()
 
-    # # 方法一 获取input_img数据 以及 weight和biases
-    # op_layer_number = 2
-    # pattern_name = "raw"
-    #
-    # # 读入图像
-    # raw = rawpy.imread(input_path)
-    # input_full = np.expand_dims(pack_raw(raw), axis=0) * ratio
-    # input_full = np.minimum(input_full, 1.0)
-    # input_img = input_full
-    #
-    # # input_img = pack_image0703.loadImage(input_path)
-    # print (input_img[:,:,:,0])
-
-    # 方法三进行指定卷积层计算
-    # 网络第二层
+    # 方法一 获取input_img数据 以及 weight和biases
     op_layer_number = 2
-    pattern_name_list = ["center_square", "center_line"]
-    pattern_name = pattern_name_list[0]
-    img_height = 1424
-    img_width = 2128
-    input_img =  init(pattern_name,img_height,img_width)
+    pattern_name = "raw"
+
+    # 读入图像
+    raw = rawpy.imread(input_path)
+    input_full = np.expand_dims(pack_raw(raw), axis=0) * ratio
+    input_full = np.minimum(input_full, 1.0)
+    input_img = input_full
+
+    # input_img = pack_image0703.loadImage(input_path)
+    print (input_img[:,:,:,0])
+
+    # # 方法三进行指定卷积层计算
+    # # 网络第二层
+    # op_layer_number = 2
+    # pattern_name_list = ["center_square", "center_line"]
+    # pattern_name = pattern_name_list[0]
+    # img_height = 1424
+    # img_width = 2128
+    # input_img =  init(pattern_name,img_height,img_width)
 
     # layer_name_list: ['g_conv1_1', 'g_conv1_2', 'g_conv2_1', 'g_conv2_2', 'g_conv3_1', 'g_conv3_2', 'g_conv4_1', 'g_conv4_2', 'g_conv5_1', 'g_conv5_2', 'g_conv6_1', 'g_conv6_2',
     # 'g_conv7_1', 'g_conv7_2', 'g_conv8_1', 'g_conv8_2', 'g_conv9_1', 'g_conv9_2', 'g_conv10']

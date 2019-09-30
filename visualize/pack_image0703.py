@@ -45,49 +45,6 @@ def plot_image(image_array):
 
 
 
-def pack_raw(numpy_img):
-    # pack Bayer image to 4 channels
-    # im = raw.raw_image_visible.astype(np.float32)
-    # print("im: " + str(im.shape))
-
-    # plot_original_image(im)
-
-    # subtract the black level
-    # im = np.maximum(im - 512, 0) / (16383 - 512)
-    # im.shape: (2848, 4256, 1)
-    im = np.expand_dims(numpy_img, axis=2)
-    img_shape = im.shape
-    # print ("img_shape: " + str(im.shape))
-    H = img_shape[0]
-    W = img_shape[1]
-    #
-    # print (im[0:4,0:4,:])
-    # print ("=================================")
-    # print (im[0:8:2, 0:8:2, :])
-    # print (im[0:8:2, 1:8:2, :])
-    # print (im[1:8:2, 0:8:2, :])
-    # print (im[1:8:2, 1:8:2, :])
-    # print ("=================================")
-    # im_out = np.concatenate((im[0:8:2, 0:8:2, :],
-    #                       im[0:8:2, 1:8:2, :],
-    #                       im[1:8:2, 1:8:2, :],
-    #                       im[1:8:2, 0:8:2, :]), axis=2)
-    # print (im_out)
-    # print ("im_out: " + str(im_out.shape))
-    # print (im_out[:,:,0])
-    # print ("=================================")
-    #
-    #
-    # print ("im: " + str(im.shape))
-
-    out = np.concatenate((im[0:H:2, 0:W:2, :],          #(0,0): 0.00018902     red:0
-                          im[0:H:2, 1:W:2, :],          #(0,1): 6.30080031e-05 green1:1
-                          im[1:H:2, 1:W:2, :],          #(1,1): 0              blue:2
-                          im[1:H:2, 0:W:2, :]), axis=2) #(1,0):  0.00012602    green2:3
-    # print ("out: " + str(out.shape))
-
-    return out
-
 def mirror(x, min, max):
     if x < min:
         return min - x
@@ -208,6 +165,22 @@ def get_green_pixel(pack_img):
     return green_img
 
 
+def pack_raw(numpy_img):
+    im = np.expand_dims(numpy_img, axis=2)
+    img_shape = im.shape
+    # print ("img_shape: " + str(im.shape))
+    H = img_shape[0]
+    W = img_shape[1]
+
+    out = np.concatenate((im[0:H:2, 0:W:2, :],  # (0,0): 0.00018902     red:0
+                          im[0:H:2, 1:W:2, :],  # (0,1): 6.30080031e-05 green1:1
+                          im[1:H:2, 1:W:2, :],  # (1,1): 0              blue:2
+                          im[1:H:2, 0:W:2, :]), axis=2)  # (1,0):  0.00012602    green2:3
+    # print ("out: " + str(out.shape))
+
+    return out
+
+
 def raw_to_numpy(raw):
 
     # raw_array = np.array(raw_img).reshape((h, w)).astype("float")
@@ -241,11 +214,6 @@ def loadImage(input_image_dir):
 
     # scale the data by the amplication ratio
     input_images = np.expand_dims(input_images_raw, axis=0) * ratio
-
-    # #crop
-    H = input_images.shape[1]
-    W = input_images.shape[2]
-    # print ("input_images: " + str(input_images.shape))
 
     input_full = np.minimum(input_images, 1.0)
     # print ("input_full: " + str(input_full.shape))

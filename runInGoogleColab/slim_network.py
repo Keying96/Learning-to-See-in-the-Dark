@@ -8,6 +8,8 @@ import tensorflow.contrib.slim as slim
 import sys
 sys.path.append("/home/zhu/PycharmProjects/SeeInTheDark_Threading/visualize")
 import pack_image0703
+from tensorflow.python import pywrap_tensorflow
+
 
 # sess = tf.InteractiveSession()
 global img_conv1
@@ -122,10 +124,6 @@ def pack_raw(raw):
                           im[0:H:2, 1:W:2, :],
                           im[1:H:2, 1:W:2, :],
                           im[1:H:2, 0:W:2, :]), axis=2)
-    # out = np.concatenate((im[0:H:2, 0:W:2, :],
-    #                       im[0:H:2, 0:W:2, :],
-    #                       im[0:H:2, 0:W:2, :],
-    #                       im[0:H:2, 0:W:2, :]), axis=2)
 
     return out
 
@@ -146,27 +144,52 @@ input_full = np.expand_dims(pack_raw(raw), axis=0) * ratio
 input_full = np.minimum(input_full, 1.0)
 in_image = input_full
 # input_img = pack_image0703.loadImage(input_path)
-print (in_image[:, :, :, 0])
+print (in_image[:, :, :, 1])
+
+image0703 = pack_image0703.loadImage(input_path)
+# print (image0703[:,:,:,1])
 
 
-conv1 = slim.conv2d(in_image, 32, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv1_1')
-conv1_1_feature = conv1[:,:,:,0:32]
-conv1 = slim.conv2d(conv1, 32, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv1_2')
-conv1_2_feature = conv1[:,:,:,0:32]
 
+
+
+
+
+# with sess.as_default():
 #
-saver = tf.train.Saver()
-ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
-if ckpt:
-    print('loaded ' + ckpt.model_checkpoint_path)
-    saver.restore(sess, ckpt.model_checkpoint_path)
+#     # decompose_conv_name = 'g_conv1_1'
+#     # with tf.name_scope(decompose_conv_name) as scope:
+#     #     kernel = tf.Variable(tf.truncated_normal([3, 3, 4, 32], dtype=tf.float32,
+#     #                                              stddev=1e-1), name='weights')
+#     #     biases = tf.Variable(tf.constant(0.0, shape=[32], dtype=tf.float32),
+#     #                          trainable=True, name='biases')
+#     #
+#
+#
+#     conv1 = slim.conv2d(in_image, 32, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv1_1')
+#     conv1_1_feature = conv1[:,:,:,0:32]
+#
+#     checkpoint_path = os.path.join(checkpoint_dir, "model.ckpt")
+#     saver = tf.train.Saver()
+#     # saver = tf.compat.v1.train.Saver()
+#     ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
+#     if ckpt:
+#         print('loaded ' + ckpt.model_checkpoint_path)
+#         saver.restore(sess, ckpt.model_checkpoint_path)
+#
+#     # kernel_list = kernel.eval()
+#     # print ("op_kernel_shape[:,:,0,0]: {}".format(kernel_list[:,:,0,0]))
+#     # print ("op_kernel_shape[:,:,1,0]: {}".format(kernel_list[:,:,1,0]))
+#     # print ("op_kernel_shape[:,:,2,0]: {}".format(kernel_list[:,:,2,0]))
+#     # print ("op_kernel_shape[:,:,3,0]: {}".format(kernel_list[:,:,3,0]))
+#     #
+#     # print ("op_biases_shape: {}".format(biases.eval()))
+#
+#
+#     sess.run(conv1)
+#     print ("conv1_1_feature[:,:,:,0]: {}".format(conv1_1_feature.eval()[:,:,:,0]))
+#     # conv1 = slim.conv2d(conv1, 32, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv1_2')
+#     # conv1_2_feature = conv1[:,:,:,0:32]
 
-with sess.as_default():
-    # output = sess.run(out_image, feed_dict={in_image: input_full})
-    output = sess.run(conv1)
-    print (output.shape)
-    print (conv1_1_feature.eval()[:,:,:,0])
-    print (conv1_2_feature.eval()[:,:,:,0])
-    # output = np.minimum(np.maximum(output, 0), 1)
-    # output = output[0, :, :, :]
-    # sess.close()
+
+
