@@ -4,7 +4,7 @@ import os, errno
 import np
 import matplotlib.pyplot as plt
 import time
-_Impulses = ["center_square","center_line"]
+_Impulses = ["center_square","center_line","Sony"]
 result_dir = "./decompose_results/impluse_patterns/"
 
 
@@ -55,19 +55,45 @@ class CreateImpulseImg(object):
             pattern =  CreateCenterLine(center_width, center_height,
                                         img, self._impulse_size).create()
 
-        prepare_dir(result_dir)
+        elif self._impulse_type == 2:
+            pattern_name = _Impulses [2]
+            pattern =  CreateSony(center_width, center_height,
+                                        img, self._impulse_size).create()
+
+        # 输出图像plt
         h = pattern.shape[0]
         w = pattern.shape[1]
         out_img = pattern[:,:,0].reshape((h,w))
         plt.imshow(out_img, cmap="gray")
+
+        # 设置图像文件名save_name
+        prepare_dir(result_dir)
         time_now = str(time.time())[-8:-3]
-        pattern_name = '{}_{}.png'.format(pattern_name, time_now)
-        save_name = os.path.join(result_dir, pattern_name )
+        pattern_name = '{}_{}'.format(pattern_name, time_now)
+        name = "{}.png".format(pattern_name)
+        save_name = os.path.join(result_dir, name )
         plt.savefig(save_name, dpi=600)
         print (os.path.join(save_name))
 
-        return pattern, pattern_name
 
+        return pattern, pattern_name #返回图像图像所有channel数据,和图像名
+
+class CreateSony(CreateImpulseImg):
+    def __int__(self):
+        self._pattern = 0
+
+    def create(self):
+        for j in range(self._center_width):
+            for i in range(self._center_height):
+                if (j >= (self._center_width - self._impulse_size) and j <= (self._center_width + self._impulse_size)) \
+                        and (i >= (self._center_height - self._impulse_size) and i <= (self._center_height + self._impulse_size)):
+                    self._img[i, j, :] = 0
+                else:
+                    self._img[i, j, :] = 1
+
+        self._pattern = self._img
+
+        return  self._pattern
 
 class CreateCenterSquare(CreateImpulseImg):
     def __init__(self,center_width, center_height,img,impulse_size):

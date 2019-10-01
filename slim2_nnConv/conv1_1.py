@@ -39,20 +39,23 @@ def lrelu(x):
 
     return tf.maximum(x * 0.2, x)
 
-def concat_feature(feature_conv):
+def concat_feature(feature_conv, num_max_list):
     """ 减少feature_list占据CPU的内存，每存储5次进行一次加法计算
 
     :return: 进行加法后的feature_list
     """
     feature_conv_list = feature_conv
     len_list = len(feature_conv_list)
+    print ("len(feature_conv_list): {}".format(len_list))
+    # print (feature_conv_list)
 
-    if len_list >= 5:
-        concat_feature = tf.concat(feature_conv_list, axis=3)
-        concat_feature = (tf.reduce_sum(concat_feature, axis=3, keepdims=True))
-        feature_conv_list = concat_feature
-    else :
-        feature_conv_list = feature_conv
+    with sess.as_default():
+        if len_list >= num_max_list:
+            concat_feature = tf.concat(feature_conv_list, axis=3)
+            concat_feature = (tf.reduce_sum(concat_feature, axis=3, keepdims=True))
+            feature_conv_list = []
+            feature_conv_list.append(concat_feature.eval())
+
 
     return feature_conv_list
     # op_biases_1_1 = tf.reshape(op_biases_list[0].eval()[0], [1])
@@ -61,25 +64,30 @@ def concat_feature(feature_conv):
     # sess.run(conv1_1)
     # print ("conv1_1 {}".format(conv1_1.eval()))
 
-def plot_channel_feature_map(channel_feature, decompose_conv_dir, image_channel):
+def plot_channel_feature_map(channel_feature,
+                             decompose_conv_dir,
+                             pattern_name,
+                             image_channel):
     # the shape of "channel_feature_map": (1, 1424, 2128, 1)
     with sess.as_default():
 
-        op_feature_channel = channel_feature.eval()
-        h = op_feature_channel.shape[1]
-        w = op_feature_channel.shape[2]
+        num_channel = len(channel_feature)
+        for curr_channel in range(num_channel):
+            op_feature_channel = channel_feature[curr_channel]
+            h = op_feature_channel.shape[1]
+            w = op_feature_channel.shape[2]
 
-        image_array = op_feature_channel.reshape((h,w))
+            image_array = op_feature_channel.reshape((h,w))
 
-        plt.imshow(image_array,cmap="gray")
-        savename = os.path.join(decompose_conv_dir, '{}.png'.format(image_channel))
-        plt.savefig(savename,dpi = 600)
-        print (savename)
+            plt.imshow(image_array,cmap="gray")
+            savename = os.path.join(decompose_conv_dir, '{}_{}.png'.format(pattern_name,image_channel))
+            plt.savefig(savename,dpi = 600)
+            print (savename)
 
 def nn_conv1_1(input_img,
+               pattern_name,
                op_kernel_list,
                op_biases_list,
-               pattern_name,
                op_kernelshape_list,
                op_biasesshape_list,
                decompose_conv_name):
@@ -92,27 +100,33 @@ def nn_conv1_1(input_img,
         curr_layer = 0
         input_img = tf.reshape(input_img, [1, 1424, 2128, 4])
 
-        for image_channel in range(input_img.shape[3]):
+        num_op_channel = input_img.shape[3]
+        print ("num_op_channel: {}".format(num_op_channel))
+
+        for image_channel in range(num_op_channel):
             feature_conv1_1 = []
             op_img = tf.reshape(input_img[:, :, :, image_channel], [1, 1424, 2128, 1])
             num_output = op_kernelshape_list[curr_layer][3]
+            print ("num_output: {}".format(num_output))
 
             for num_kernel1_1 in range(num_output):
+                print ("image_channel: {} num_kernel1_1: {}".format(image_channel, num_kernel1_1))
                 op_kernel_1_1 = tf.reshape(op_kernel_list[curr_layer].eval()[:, :, image_channel, num_kernel1_1],
                                            [3, 3, 1, 1])
                 conv = tf.nn.conv2d(op_img, op_kernel_1_1, [1, 1, 1, 1], padding='SAME')
                 sess.run(conv)
                 feature_conv1_1.append(conv.eval())
 
-                feature_conv1_1 = concat_feature(feature_conv1_1)
+                feature_conv1_1 = concat_feature(feature_conv1_1,5)
 
-            feature_channel = feature_conv1_1
-            feature_channel_list.append(feature_channel)
-            plot_channel_feature_map(feature_channel, decompose_conv_dir, image_channel)
+            feature_channel = concat_feature(feature_conv1_1,1)
+            plot_channel_feature_map(feature_channel, decompose_conv_dir,
+                                     pattern_name,image_channel)
+            # feature_channel_list.append(feature_channel)
 
 
 if __name__ == '__main__':
-    gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.5)
+    gpu_options = tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.9)
     config = tf.compat.v1.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
     sess = tf.compat.v1.Session(config=config)
     init_sess = tf.compat.v1.global_variables_initializer()
@@ -123,15 +137,18 @@ if __name__ == '__main__':
     layer_name_list, op_kernel_list, op_biases_list, \
     op_kernelshape_list, op_biasesshape_list, decompose_conv_name = load.load_model_checkpoint()
 
-    # 获取input_img
-    img_height = 1424
-    img_width = 2128
-    impulse_type = 0
-    impulse_size = 1
-    input_img, pattern_name = create_impulse_img.CreateImpulseImg(impulse_type, impulse_size,
-                                                 img_height, img_width).create()
+    # # 获取自定义input_img
+    # img_height = 1424
+    # img_width = 2128
+    # impulse_type = 0
+    # impulse_size = 1
+    # input_img, pattern_name = create_impulse_img.CreateImpulseImg(impulse_type, impulse_size,
+    #                                              img_height, img_width).create()
+    # print ("pattern_name: {}".format(pattern_name))
 
-    nn_conv1_1(input_img, op_kernel_list, op_biases_list,pattern_name,
+    # 获取相机input_img
+    input_img, pattern_name = create_impulse_img.
+    nn_conv1_1(input_img, pattern_name,op_kernel_list, op_biases_list,
                          op_kernelshape_list,op_biasesshape_list,decompose_conv_name)   #进行conv1_1卷积计算
 
 

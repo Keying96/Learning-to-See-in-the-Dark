@@ -4,6 +4,7 @@
 """
 
 import tensorflow as tf
+# import tensorflow.compat.v1 as tf
 from tensorflow.python import pywrap_tensorflow
 import re, os
 
@@ -52,7 +53,7 @@ class LoadModelCheckpoint(object):
                 layer_name_list.append(key.split("/weights/Adam_1")[0])
 
         layer_name_list = __sort_strings_with_emb_numbers(layer_name_list)
-        decompose_conv_name = layer_name_list[op_layer_number]
+        decompose_conv_name = layer_name_list[self._op_layer_number]
 
         for i in range(self._op_layer_number):
             decompose_conv_name = layer_name_list[i]
@@ -79,17 +80,15 @@ class LoadModelCheckpoint(object):
                 op_kernel_list.append(kernel)
                 op_biases_list.append(biases)
 
-        # init = tf.global_variables_initializer()
+        # init = tf.compat.v1.global_variables_initializer()
         with self._sess.as_default():
-            # with tf.compat.v1.Session() as sess:
-            #     sess.run(init)
 
-            saver = tf.compat.v1.train.Saver()
-            ckpt = tf.train.get_checkpoint_state(self._checkpoint_dir)
+            saver = tf.train.Saver()
+            ckpt = tf.compat.v1.train.get_checkpoint_state(self._checkpoint_dir)
             if ckpt:
                 print('loaded ' + ckpt.model_checkpoint_path)
                 saver.restore(self._sess, ckpt.model_checkpoint_path)
-        #
+
         # print ("op_kernel_list: " + str(op_kernel_list[0].eval()))
         #     print ("op_biases_list: " + str(op_biases_list[0].eval()[0]))
         return layer_name_list, op_kernel_list, op_biases_list, \
@@ -102,13 +101,20 @@ if __name__ == '__main__':
     sess = tf.compat.v1.Session(config=config)
     init_sess = tf.compat.v1.global_variables_initializer()
 
+    print (tf.version)
+
     checkpoint_dir = '../checkpoint/Sony/'
     op_layer_number = 2
 
     load = LoadModelCheckpoint(sess, checkpoint_dir, op_layer_number)
 
     layer_name_list, op_kernel_list, op_biases_list,\
-    op_kernelshape_list,op_biasesshape_list= load.load_model_checkpoint()
+    op_kernelshape_list,op_biasesshape_list, decompose_conv_name= load.load_model_checkpoint()
 
-    print (layer_name_list)
+    with sess.as_default():
+
+        rint ("op_biases_list: " + str(op_biases_list[0].eval()[0]))
+        print (layer_name_list)
+
+    sess.close()
 
