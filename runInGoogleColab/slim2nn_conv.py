@@ -84,7 +84,6 @@ def slim2nn_conv2d(image, op_kernel_list, op_biases_list,op_kernelshape_list,op_
 
     with sess.as_default():
 
-
         op_img = tf.reshape(image, [1, 1424, 2128, 4])
         op_kernel_1_1 = tf.reshape(op_kernel_list[0].eval(), [3, 3, 4, 32])
         op_biases_1_1 = tf.reshape(op_biases_list[0].eval(), [32])
@@ -115,55 +114,12 @@ def slim2nn_conv2d(image, op_kernel_list, op_biases_list,op_kernelshape_list,op_
                 feature_channel_list.append(conv.eval())
 
         concat_feature = tf.concat(feature_channel_list, axis=3)
-        concat_feature= (tf.reduce_sum(concat_feature, axis=3, keepdims=True))
+        concat_feature = (tf.reduce_sum(concat_feature, axis=3, keepdims=True))
         op_biases_1_1 = tf.reshape(op_biases_list[0].eval()[0], [1])
         bias = tf.nn.bias_add(concat_feature, op_biases_1_1)
         conv1_1 = lrelu(bias)
         sess.run(conv1_1)
         print ("conv1_1 {}".format(conv1_1.eval()))
-
-
-
-                # op_biases_1_1 = tf.reshape(op_biases_list[curr_layer].eval()[num_kernel1_1], [1])
-                # print ("num_kernel1_1 {} image_channel {} ".format(num_kernel1_1,image_channel))
-                # print ("op_kernel_1_1 {}: {}" .format(op_kernel_1_1.eval().shape, op_kernel_1_1.eval()))
-                # print ("op_biases_1_1 {}: {}" .format(op_biases_1_1.eval().shape, op_biases_1_1.eval()))
-                #
-                # conv = tf.nn.conv2d(op_img, op_kernel_1_1, [1, 1, 1, 1], padding='SAME')
-                # # bias = tf.nn.bias_add(conv, op_biases_1_1)
-                # # conv1_1 = lrelu(bias)
-                #
-                # curr_layer = curr_layer+1
-                # # num_output = op_kernelshape_list[curr_layer][3]
-                # op_num_output = 1
-                # num_input = op_kernelshape_list[curr_layer][2]
-                # feature_conv1_2_list = []
-                #
-                # sess.run(conv)
-                # feature_channel_list.append(conv)
-
-
-        # print ("-------------------------------------------------------")
-        # print (feature_channel_list[0].eval().shape)
-        # print (feature_channel_list[0].eval()[:,:,:,0])
-        # print ("-------------------------------------------------------")
-        # print (feature_channel_list[1].eval().shape)
-        # print (feature_channel_list[1].eval()[:,:,:,0])
-        # print ("-------------------------------------------------------")
-        # print (feature_channel_list[2].eval().shape)
-        # print (feature_channel_list[2].eval()[:,:,:,0])
-        # print ("-------------------------------------------------------")
-        # print (feature_channel_list[3].eval().shape)
-        # print (feature_channel_list[3].eval()[:,:,:,0])
-        # print ("-------------------------------------------------------")
-
-        # concat_feature = tf.concat(feature_channel_list, axis=3)
-        # concat_feature= (tf.reduce_sum(concat_feature, axis=3, keepdims=True))
-        # op_biases_1_1 = tf.reshape(op_biases_list[curr_layer].eval()[num_kernel1_1], [1])
-        # bias = tf.nn.bias_add(concat_feature, op_biases_1_1)
-        # conv1_1 = lrelu(bias)
-        # sess.run(conv1_1)
-        # print (conv1_1.eval())
 
 
     end_conv = time.time()

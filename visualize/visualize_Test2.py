@@ -27,7 +27,8 @@ result_dir = './result_Iphone/'
 
 # input_name = str(sys.argv[1])
 # input_path = input_dir + input_name + '.dng'
-input_path = '/home/zhu/PycharmProjects/SeeInTheDark_Threading/dataset/short/00001_00_0.1s.ARW'
+input_path = '/home/zhu/PycharmProjects/SeeInTheDark_Threading' \
+             '/dataset/short/00001_00_0.1s.ARW'
 # log_dir = log_dir + input_name
 # print('log_dir: ' + log_dir)
 
@@ -48,8 +49,8 @@ def upsample_and_concat(x1, x2, output_channels, in_channels):
 
 def network(input):
 
-    conv1 = slim.conv2d(input, 32, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv1_1')
-    conv1 = slim.conv2d(conv1, 32, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv1_2')
+    conv1_1 = slim.conv2d(input, 32, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv1_1')
+    conv1 = slim.conv2d(conv1_1, 32, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv1_2')
     pool1 = slim.max_pool2d(conv1, [2, 2], padding='SAME')
     # print("Within session, tf.shape(conv1)： ", sess.run(tf.shape(pool1)))
     # tf.summary.image('conv1', tf.reshape(tf.transpose(conv1,perm=[0,3,1,2]),[-1,1510,2014,1]), 32)
@@ -126,7 +127,7 @@ def network(input):
     out = tf.depth_to_space(conv10, 2)
     # tf.summary.image('conv10', tf.reshape(conv10, [-1, 1512, 2016, 1]), 12)
     # tf.summary.image('out', tf.reshape(out, [-1, 3024, 4032, 3]), 1)
-    return out
+    return conv1_1,conv1,out
 
 
 def pack_raw(raw):
@@ -177,9 +178,13 @@ if ckpt:
     saver.restore(sess, ckpt.model_checkpoint_path)
 
 # output = sess.run(out_image, feed_dict={in_image: input_full})
-output = sess.run(out_image)
+conv1_1,conv1,output = sess.run(out_image)
 output = np.minimum(np.maximum(output, 0), 1)
 output = output[0, :, :, :]
+print ("conv1_1[:,:,:,0]: {}\n".format(conv1_1[:,:,:,0]))
+
+print ("conv1[:,:,:,0]: {}\n".format(conv1[:,:,:,0]))
+
 #
 tf.summary.image('output', tf.reshape(output,[-1,3024,4032,3]), 1)
 

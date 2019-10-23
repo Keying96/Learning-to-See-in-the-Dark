@@ -7,12 +7,15 @@ import tensorflow as tf
 # import tensorflow.compat.v1 as tf
 from tensorflow.python import pywrap_tensorflow
 import re, os
+import tensorflow.contrib.slim as slim
 
 
 class LoadModelCheckpoint(object):
 
     def __init__(self, sess, checkpoint_dir,op_layer_number):
-        self._sess = sess
+    # def __init__(self, checkpoint_dir,op_layer_number):
+        # self.sess = sess
+        self.sess = sess
         self._checkpoint_dir = checkpoint_dir
         self._op_layer_number = op_layer_number
 
@@ -80,18 +83,23 @@ class LoadModelCheckpoint(object):
                 op_kernel_list.append(kernel)
                 op_biases_list.append(biases)
 
-        # init = tf.compat.v1.global_variables_initializer()
-        with self._sess.as_default():
+        # def lrelu(x):
+        #     return tf.maximum(x * 0.2, x)
 
+        # conv1_1 = slim.conv2d(input, 32, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv1_1')
+
+        # init = tf.compat.v1.global_variables_initializer()
+        with self.sess.as_default():
+        # with sess.as_default():
+        # with tf.compat.v1.Session() as sess:
             saver = tf.train.Saver()
             ckpt = tf.compat.v1.train.get_checkpoint_state(self._checkpoint_dir)
             if ckpt:
                 print('loaded ' + ckpt.model_checkpoint_path)
-                saver.restore(self._sess, ckpt.model_checkpoint_path)
+                saver.restore(self.sess, ckpt.model_checkpoint_path)
+                # print ("conv1_1.eval(): {}".format(sess.run(conv1_1)))
 
-        # print ("op_kernel_list: " + str(op_kernel_list[0].eval()))
-        #     print ("op_biases_list: " + str(op_biases_list[0].eval()[0]))
-        return layer_name_list, op_kernel_list, op_biases_list, \
+        return  layer_name_list, op_kernel_list, op_biases_list, \
                op_kernelshape_list, op_biasesshape_list, decompose_conv_name
 
 
@@ -113,8 +121,15 @@ if __name__ == '__main__':
 
     with sess.as_default():
 
-        rint ("op_biases_list: " + str(op_biases_list[0].eval()[0]))
+        # print ("op_biases_list: " + str(op_biases_list[0].eval()[0]))
         print (layer_name_list)
+
+        op_kernel_1_2 = tf.reshape(op_kernel_list[1].eval()[:, :, 0, 0],
+                                   [3, 3, 1, 1])
+        op_biases_1_2 = tf.reshape(op_biases_list[1].eval()[0], [1])
+
+        print ("op_kernel_1_2:{} op_biases_1_2:{}".format(op_kernel_1_2.eval(),op_biases_1_2.eval()))
+
 
     sess.close()
 

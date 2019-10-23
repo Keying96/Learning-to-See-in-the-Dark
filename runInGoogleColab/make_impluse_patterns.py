@@ -128,10 +128,13 @@ def conver2Tensor(pattern):
     return input_img
 
 if __name__ == '__main__':
-    img_height = 1424
-    img_width = 2128
+    # img_height = 1424
+    # img_width = 2128
 
-    pattern_name = pattern_name_list[1]
+    img_height = 15
+    img_width = 15
+
+    pattern_name = pattern_name_list[0]
 
     # 得到pattern矩阵
     pattern = create_pattern(pattern_name,img_height,img_width)
