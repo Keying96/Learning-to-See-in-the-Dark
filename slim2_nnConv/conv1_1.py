@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# tensorflow verion 1.13.1
 
 
 import load_model_checkpoint
