@@ -22,14 +22,38 @@ input_path = '/home/zhu/PycharmProjects/SeeInTheDark_Threading/dataset/short/000
 def lrelu(x):
     return tf.maximum(x * 0.2, x)
 
-def network(input):
-
+def network(op_layer_number, input):
+    list_out = []
     conv1_1 = slim.conv2d(input, 32, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv1_1')
+    list_out.append(conv1_1)
     conv1_2 = slim.conv2d(conv1_1, 32, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv1_2')
-    # pool1 = slim.max_pool2d(conv1, [2, 2], padding='SAME')
-    # conv1_image = conv1[0:2, :, :, 0:32]
-    # conv1_image = tf.transpose(conv1_image, perm=[3,1,2,0])
-    return conv1_1,conv1_2
+    pool1 = slim.max_pool2d(conv1_2, [2, 2], padding='SAME')
+    list_out.append(pool1)
+
+    conv2_1 = slim.conv2d(pool1, 64, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv2_1')
+    list_out.append(conv2_1)
+    conv2_2 = slim.conv2d(conv2_1, 64, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv2_2')
+    pool2 = slim.max_pool2d(conv2_2, [2, 2], padding='SAME')
+    list_out.append(pool2)
+
+    conv3_1 = slim.conv2d(pool2, 128, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv3_1')
+    list_out.append(conv3_1)
+    conv3_2 = slim.conv2d(conv3_1, 128, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv3_2')
+    pool3 = slim.max_pool2d(conv3_2, [2, 2], padding='SAME')
+    list_out.append(pool3)
+
+    conv4_1 = slim.conv2d(pool3, 256, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv4_1')
+    list_out.append(conv4_1)
+    conv4_2 = slim.conv2d(conv4_1, 256, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv4_2')
+    pool4 = slim.max_pool2d(conv4_2, [2, 2], padding='SAME')
+    list_out.append(pool4)
+
+    conv5_1 = slim.conv2d(pool4, 512, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv5_1')
+    list_out.append(conv5_1)
+    conv5_2 = slim.conv2d(conv5_1, 512, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv5_2')
+    list_out.append(conv5_2)
+
+    return list_out[op_layer_number-1]
 
 def load_image(input_path):
     """ 将图像处理成numpy格式
@@ -76,12 +100,13 @@ def pack_raw(raw):
                           im[1:H:2, 0:W:2, :]), axis=2)
     return out
 
-def init(input_full):
+def init(op_layer_number, input_full):
     #初始化
     tf.compat.v1.reset_default_graph()
     sess = tf.compat.v1.Session()
     init_sess = tf.compat.v1.global_variables_initializer()
     sess.run(init_sess)
+    op_layer_number = op_layer_number -1
 
     # raw = rawpy.imread(input_path)
     # input_full = np.expand_dims(pack_raw(raw), axis=0) * ratio
@@ -91,7 +116,7 @@ def init(input_full):
     input_full = tf.reshape(input_full,[1,h,w,4])
     in_image = input_full
 
-    out_image,conv1_2 = network(in_image)
+    conv_out = network(op_layer_number,in_image)
     #
     saver = tf.train.Saver()
     ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
@@ -99,16 +124,9 @@ def init(input_full):
         print('loaded ' + ckpt.model_checkpoint_path)
         saver.restore(sess, ckpt.model_checkpoint_path)
 
-    conv1_1 = sess.run(out_image)
-    conv1_2 = sess.run(conv1_2)
-    # print (output)
-    # output = sess.run(out_image)
-    # conv1_1 = np.minimum(np.maximum(conv1_1, 0), 1)
-    # conv1_1 = conv1_1[0, :, :, :]
+    conv_out = sess.run(conv_out)
 
-    return conv1_1,conv1_2
-
-    # sess.close()
+    return conv_out
 
 if __name__ == '__main__':
 
@@ -121,7 +139,12 @@ if __name__ == '__main__':
                                                  img_height, img_width).create()
     print ("===================== Start to calculate the result of {} =======================".format(pattern_name))
 
-    init(input_img)
+    op_layer_number = 4
+    conv_out = init(op_layer_number, input_img)
+    print (conv_out.shape)
+    print (conv_out)
+    for i in range(len(conv_out[:,:,:,])):
+        print(conv_out[:,:,:,i][0])
 
 
 

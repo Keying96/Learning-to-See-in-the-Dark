@@ -27,8 +27,7 @@ result_dir = './result_Iphone/'
 
 # input_name = str(sys.argv[1])
 # input_path = input_dir + input_name + '.dng'
-input_path = '/home/zhu/PycharmProjects/SeeInTheDark_Threading' \
-             '/dataset/short/00001_00_0.1s.ARW'
+input_path ="/home/zhu/PycharmProjects/reLearning_network/dataset/Sony/short/00001_00_0.04s.ARW"
 # log_dir = log_dir + input_name
 # print('log_dir: ' + log_dir)
 
@@ -50,8 +49,11 @@ def upsample_and_concat(x1, x2, output_channels, in_channels):
 def network(input):
 
     conv1_1 = slim.conv2d(input, 32, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv1_1')
+    print("conv1_1: {}".format(conv1_1))
     conv1 = slim.conv2d(conv1_1, 32, [3, 3], rate=1, activation_fn=lrelu, scope='g_conv1_2')
+    print("conv1: {}".format(conv1))
     pool1 = slim.max_pool2d(conv1, [2, 2], padding='SAME')
+    print("pool1: {}".format(pool1))
     # print("Within session, tf.shape(conv1)： ", sess.run(tf.shape(pool1)))
     # tf.summary.image('conv1', tf.reshape(tf.transpose(conv1,perm=[0,3,1,2]),[-1,1510,2014,1]), 32)
     # tf.summary.image('conv1', tf.reshape(conv1, [-1, 1512, 2016, 1]), 32)
@@ -186,7 +188,7 @@ print ("conv1_1[:,:,:,0]: {}\n".format(conv1_1[:,:,:,0]))
 print ("conv1[:,:,:,0]: {}\n".format(conv1[:,:,:,0]))
 
 #
-tf.summary.image('output', tf.reshape(output,[-1,3024,4032,3]), 1)
+# tf.summary.image('output', tf.reshape(output,[-1,3024,4032,3]), 1)
 
 if not os.path.isdir(result_dir + 'final/'):
     os.makedirs(result_dir + 'final/')

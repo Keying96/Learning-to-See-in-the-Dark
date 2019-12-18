@@ -1,5 +1,4 @@
 # -*- coding:utf-8 -*-
-# -*- coding:utf-8 -*-
 
 # uniform content loss + adaptive threshold + per_class_input + recursive G
 # improvement upon cqf37
@@ -11,7 +10,8 @@ import numpy as np
 import rawpy
 import glob
 
-input_dir = './dataset/UnderexposedImage/'
+# input_dir = './dataset/UnderexposedImage/'
+input_dir = "/home/zhu/PycharmProjects/reLearning_network/dataset/Sony/short/00001_00_0.1s.ARW"
 # input_dir = './dataset/Iphone/'
 checkpoint_dir = './checkpoint/Sony/'
 result_dir = './result_Iphone/'

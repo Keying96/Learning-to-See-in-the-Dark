@@ -4,6 +4,13 @@
     <list>
       <list>
         <remote-mappings server-id="python@sftp://zhu@133.87.129.197:22/home/zhu/anaconda3/envs/python27/bin/python2.7" />
+        <remote-mappings server-id="python@sftp://zhu@133.87.129.197:22/home/zhu/anaconda3/envs/py2/bin/python">
+          <settings>
+            <list>
+              <mapping local-root="$PROJECT_DIR$" remote-root="/home/zhu/PycharmProjects/Learning-to-See-in-the-Dark" />
+            </list>
+          </settings>
+        </remote-mappings>
       </list>
     </list>
   </component>

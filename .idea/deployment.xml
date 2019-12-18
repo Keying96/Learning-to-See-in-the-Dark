@@ -5,7 +5,14 @@
       <paths name="zhu@133.87.129.197:22">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/zhu/PycharmProjects/SeeInTheDark_Threading" local="$PROJECT_DIR$" />
+            <mapping deploy="/home/zhu/PycharmProjects/Learning-to-See-in-the-Dark" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="zhu@133.87.129.197:22 (1)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/zhu/PycharmProjects/Learning-to-See-in-the-Dark" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>
